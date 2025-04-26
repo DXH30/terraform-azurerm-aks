@@ -3,6 +3,13 @@ resource "azurerm_resource_group" "rg" {
   location = var.location
 }
 
+resource "azurerm_management_lock" "lock" {
+  name       = "rg-${var.name}-${var.env}-lock"
+  scope      = azurerm_resource_group.rg.id
+  lock_level = "ReadOnly"
+  notes      = "Can't change this resources"
+}
+
 resource "azurerm_public_ip" "pip" {
   name                = "pip-${var.name}-${var.env}"
   resource_group_name = azurerm_resource_group.rg.name
@@ -99,4 +106,32 @@ resource "azurerm_monitor_workspace" "aks" {
     env        = var.env
     department = var.department
   }
+}
+
+resource "azurerm_network_security_group" "nsg" {
+  name                = "nsg-${var.name}-${var.env}"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+
+  security_rule {
+    name                       = "HTTP"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+
+  tags = {
+    env        = var.env
+    department = var.department
+  }
+}
+
+resource "azurerm_subnet_network_security_group_association" "nsga" {
+  subnet_id                 = azurerm_subnet.subnet.id
+  network_security_group_id = azurerm_network_security_group.nsg.id
 }
