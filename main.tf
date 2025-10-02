@@ -3,13 +3,6 @@ resource "azurerm_resource_group" "rg" {
   location = var.location
 }
 
-resource "azurerm_management_lock" "lock" {
-  name       = "rg-${var.name}-${var.env}-lock"
-  scope      = azurerm_resource_group.rg.id
-  lock_level = "ReadOnly"
-  notes      = "Can't change this resources"
-}
-
 resource "azurerm_public_ip" "pip" {
   name                = "pip-${var.name}-${var.env}"
   resource_group_name = azurerm_resource_group.rg.name
